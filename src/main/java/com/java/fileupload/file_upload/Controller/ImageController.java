@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 @RestController
 public class ImageController {
 
@@ -21,10 +26,13 @@ public class ImageController {
 	private StorageService stoService;
 
 	@PostMapping("/upload")
-	public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile file) {
-		
+	public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
+
+		InputStream inputStream = file.getInputStream();
+		String fileName = file.getOriginalFilename();
+
 		String response = stoService.uploadImage(file);
-		
+
 		if (response.contains("Error")) {
 			return new ResponseEntity<String>(response, HttpStatus.BAD_REQUEST);
 		} else {
@@ -32,19 +40,45 @@ public class ImageController {
 		}
 
 	}
-	@GetMapping("/download/{filename}")
-	public ResponseEntity<byte[]> downloadImage(@PathVariable String filename){
-		byte[] image=stoService.retrieveImage(filename);
-		
-		String contentType=stoService.getImageType(filename);
-		
-		if (image==null|| contentType==null) {
 
-			return ResponseEntity.badRequest().build();
+	// Endpoint to get file URL
+	@GetMapping("/url/{filename}")
+	public ResponseEntity<String> getFileUrl(@PathVariable("filename") String filename) {
+		try {
+			String url = stoService.retrieveUrl(filename);
+			return ResponseEntity.ok(url);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found: " + e.getMessage());
 		}
-		 return  ResponseEntity.ok().contentType(MediaType.valueOf(contentType)).body(image);
-			
+	}
+
+	@GetMapping("/download/{filename}")
+	public ResponseEntity<byte[]> downloadImage(@PathVariable String filename) {
+		try {
+			// Get the presigned URL for the file
+			URL presignedUrl = stoService.retrieveImageFromUrl(filename);
+
+			// Fetch the file content using the presigned URL
+			HttpURLConnection connection = (HttpURLConnection) presignedUrl.openConnection();
+			connection.setRequestMethod("GET");
+			InputStream inputStream = connection.getInputStream();
+
+			// Read the input stream to byte array
+			byte[] fileContent = inputStream.readAllBytes();
+			inputStream.close();
+
+			// Determine the file type from the URL or metadata
+			String contentType = stoService.getImageType(filename);
+
+			return ResponseEntity.ok()
+					.header("Content-Type", contentType)
+					.header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+					.body(fileContent);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}
-		
-	
+	}
 }

@@ -17,18 +17,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-@Table(name="t_imagedata")
+@Table(name = "t_imagedata")
 public class ImageData {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	private String name;
-	private String type;
-	@Lob
-	@Column(name="imagedata")
-	private byte[] imagedata;
-	
-	
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String type;
+    @Lob
+    @Column(name = "imagedata")
+    private byte[] imagedata;
+
+
+    private String url;
+
+
 }
 
