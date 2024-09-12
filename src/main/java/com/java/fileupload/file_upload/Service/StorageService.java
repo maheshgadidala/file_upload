@@ -50,7 +50,7 @@ public class StorageService {
 	public String uploadImage(MultipartFile file) {
 		try {
 			String fileName = file.getOriginalFilename();
-			S3Client s3Client = s3WebConfig.getS3Client();
+			S3Client s3Client = s3WebConfig.s3Client();
 
 			// Create a PutObjectRequest
 			PutObjectRequest putObjectRequest = PutObjectRequest.builder()

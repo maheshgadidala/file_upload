@@ -1,5 +1,7 @@
 package com.java.fileupload.file_upload.Controller;
 
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.ILoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,6 +21,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+@Slf4j
 @RestController
 public class ImageController {
 
@@ -77,6 +80,7 @@ public class ImageController {
 					.body(fileContent);
 
 		} catch (Exception e) {
+			log.error("Error downloading file: " + filename, e);
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}
